@@ -25,7 +25,7 @@ public class Maize2kGo {
     
     private void setHapScannerPipe () {
         //new HapMap3Processor();
-        String parameterFileS = "/Users/feilu/Documents/analysisL/pipelineTest/HapScanner/parameters_hapScanner.txt";
+        String parameterFileS = "/Users/Aoyue/NetBeansProjects/HapScanner/HapScanner/src/analysis/Parameters_hapScanner.txt";
         new HapScanner(parameterFileS);
     }
     

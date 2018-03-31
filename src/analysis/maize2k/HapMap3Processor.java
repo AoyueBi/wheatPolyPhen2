@@ -23,12 +23,11 @@ public class HapMap3Processor {
     public HapMap3Processor () {
         //this.mkHapPosAllele();
         //this.mkHapPos();
-        //this.test();
     }
     
     public void mkHapPos () {
-        String infileDirS = "/Users/feilu/Documents/analysisL/pipelineTest/HapScanner/hapPosAllele/";
-        String outfileDirS = "/Users/feilu/Documents/analysisL/pipelineTest/HapScanner/hapPos/";
+        String infileDirS = "/Users/Aoyue/Documents/Data/pipeline/hapScanner/hapPosAllele/";
+        String outfileDirS = "/Users/Aoyue/Documents/Data/pipeline/hapScanner/hapPos/";
         File[] fs = new File(infileDirS).listFiles();
         fs = IOUtils.listFilesEndsWith(fs, ".posAllele.txt.gz");
         List<File> fsList = Arrays.asList(fs);
@@ -66,8 +65,8 @@ public class HapMap3Processor {
     }
     
     public void mkHapPosAllele () {
-        String infileDirS = "/Users/feilu/Documents/analysisL/pipelineTest/HapScanner/hapMap3_AGPV4/";
-        String outfileDirS = "/Users/feilu/Documents/analysisL/pipelineTest/HapScanner/hapPosAllele/";
+        String infileDirS = "/Users/Aoyue/Downloads/hmp321_agp4/";
+        String outfileDirS = "/Users/Aoyue/Documents/Data/pipeline/hapScanner/hapPosAllele/";
         File[] fs = new File(infileDirS).listFiles();
         fs = IOUtils.listFilesEndsWith(fs, ".vcf.gz");
         List<File> fsList = Arrays.asList(fs);
@@ -109,7 +108,5 @@ public class HapMap3Processor {
         });
     }
     
-    public void test () {
-        
-    }
+   
 }
