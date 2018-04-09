@@ -22,7 +22,8 @@ public class Maize2kGo {
         this.setHapScannerPipe();
         //this.test();
         //today is Apr 9  111   222 333
-        //set a tmp zone
+        //set a tmp zone   
+        //successed in push my revised java
     }
     
     private void setHapScannerPipe () {
