@@ -22,6 +22,7 @@ public class Maize2kGo {
         this.setHapScannerPipe();
         //this.test();
         //today is Apr 9  111   222 333
+        //set a tmp zone
     }
     
     private void setHapScannerPipe () {
