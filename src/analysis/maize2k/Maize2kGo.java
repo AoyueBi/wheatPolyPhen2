@@ -21,7 +21,7 @@ public class Maize2kGo {
         //this.seqQualityTestPipe();
         this.setHapScannerPipe();
         //this.test();
-        //today is Apr 9  111
+        //today is Apr 9  111   222
     }
     
     private void setHapScannerPipe () {
