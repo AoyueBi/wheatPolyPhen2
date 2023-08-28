@@ -107,7 +107,6 @@ rm -f uniref100.fasta uniref100-formatted.fasta
 rsync -rltv --delete-after --port=33444 rsync.wwpdb.org::ftp/data/structures/divided/pdb/ $PPH/wwpdb/divided/pdb/
 rsync -rltv --delete-after --port=33444 rsync.wwpdb.org::ftp/data/structures/all/pdb/ $PPH/wwpdb/all/pdb/
 rsync -rltvz --delete-after rsync://rsync.cmbi.ru.nl/dssp/ $PPH/dssp/
-
 ```
 
 10. Download all remaining packages with the automated download procedure:
