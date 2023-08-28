@@ -1,5 +1,6 @@
 # wheatPolyPhen2
-wheatPolyPhen2 is script atlas that performs functional annotation of SNPs, maps coding SNPs to gene transcripts, extracts protein sequence annotations and structural attributes, and builds conservation profiles. 
+wheatPolyPhen2 (wheat PPH2) is script atlas that performs functional annotation of SNPs, maps coding SNPs to gene transcripts, extracts protein sequence annotations and structural attributes, and builds conservation profiles. The prediction is based on the principle of protein structure homology algorithm and a Naïve Bayes classifier algorithm using supervised machine learning. The advantage of this approach is that the degree of detriment is assigned according to the likelihood of disruption of protein function, although the training set ultimately depends on a limited number of variants identified as disease-related. An updated version of PPH2 was used with the parameter “REVERSEDIRECTION = 1” during the derived allele site estimates to eliminate **the reference bias**. PPH2 only scores nonsynonymous mutations, and there are 4 categories for PPH2: unknown, benign, possibly damaging, and possibly damaging. When PPH2 score > 0.957, it means that the mutation is probably damaging, when 0.5 < PPH2 score < 0.957, it means that the mutation is possibly damaging.
+
 
 The PolyPhen-2 Wiki site is at <http://genetics.bwh.harvard.edu/pph2/dokuwiki/start>. Here we will provide a brief pipeline and some important precautions when estimating the probability of the missense mutation being damaging in the wheat genome.
 
@@ -199,5 +200,7 @@ The PolyPhen-2 annotation summary report and the MapSNPs annotation summary repo
 - D: Probably damaging (>=0.957),
 - P: possibly damaging (0.453<=pp2_hdiv<=0.956),
 - B: benign (pp2_hdiv<=0.452)
+
+## Add the outputs into the wheat gene annotation database
 
 
