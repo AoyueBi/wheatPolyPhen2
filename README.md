@@ -129,6 +129,35 @@ make install
 cd $PPH
 ./configure
 ``` 
+**Note**
+
+> **PRECOMPATH modification**
+
+The path misses required subdirectories listed above!
+Is the path correct? 
+Keep it (Y/n)? n
+PRECOMPATH = /data1/home/aoyue/biosoftware/polyphen-2.2.3/precomputed
+
+> **parameter modification**
+
+option.conf 
+OS =  Triticum aestivum
+spnam = WHEAT
+taxn = 4565
+file = plants
+
+> **Update the database**
+
+```
+cd /data1/home/aoyue/biosoftware/polyphen-2.2.3/
+cd update
+nohup ./uniprot.pl -n plants -k 2>1.log &
+```
+Due to the large size of the file, an error occurred during program download, so I manually downloaded it myself. Further updates:
+```
+nohup ./uniprot.pl -n plants -k -s uniprot_sprot_plants.dat -s uniprot_trembl_plants.dat 2>1.log &
+nohup ./unipfam.pl -n plants 2>2.log &
+```
 
 12. Optionally, test the PolyPhen-2 installation by running the PolyPhen-2 pipeline with the test set of protein variants and compare the results to the reference output files in the $PPH/sets folder:
 ```
@@ -140,5 +169,22 @@ diff test.humdiv.output sets/test.humdiv.output
 diff test.humvar.output sets/test.humvar.output
 ```
 
+## RUN the PolyPhen-2 STANDALONE SOFTWARE
+The PolyPhen-2 analysis pipeline consists of three separate components, each one executed by a dedicated Perl program:
+MapSNPs (mapsnps.pl) Genomic SNP annotation tool
+PolyPhen-2 (run pph.pl) Protein variant annotation tool
+PolyPhen-2 (run weka.pl) Probabilistic variant classifier
+
+**The Internal call command are as followings:**
+
+```
+/data1/home/aoyue/biosoftware/polyphen-2.2.3/blast/ncbi-blast-2.12.0+/bin/blastp -seg yes -evalue 1e-3 -num_threads 1 -max_target_seqs 1000 -outfmt 5 -db /data1/home/aoyue/biosoftware/polyphen-2.2.3/nrdb/uniref100 -query A0A3B6FZV2.seq -out A0A3B6FZV2.blast
+
+/bin/sh /data1/home/aoyue/biosoftware/polyphen-2.2.3/bin/mafft --quiet --amino --retree 2 --maxiterate 2 A0A3B6GZV5_msa_in
+
+/data1/home/aoyue/biosoftware/polyphen-2.2.3/libexec/mafft/dvtditr -C 0 -t 0 -F -z 50 -P -b 62 -f -1.53 -h -0.000 -I 2 -X -p BAATARI2
+
+/data1/home/aoyue/biosoftware/polyphen-2.2.3/bin/psic -l A0A3B6CD26.aln /data1/home/aoyue/biosoftware/polyphen-2.2.3/matr/Blosum62.txt A0A3B6CD26.prf 
+```
 
 
