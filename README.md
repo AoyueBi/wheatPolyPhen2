@@ -183,6 +183,13 @@ The PolyPhen-2 analysis pipeline consists of three separate components, each one
 
 The input file was made by the script Please refer to the script wheatPolyPhen2_script.Rmd -> step1: Database import and generate input data
 
+The CMD are listed as followings:
+```
+run_pph.pl ../001_input/TraesCS1A02G001800.1.txt > ../002_out1/TraesCS1A02G001800.1.features 2> ../004_log/TraesCS1A02G001800.1.log
+run_weka.pl ../002_out1/TraesCS1A02G001800.1.features 1> ../003_out2/TraesCS1A02G001800.1.predictions
+echo TraesCS1A02G001800.1 Done
+```
+
 **The Internal call commands are as followings:**
 
 ```
@@ -205,4 +212,7 @@ The PolyPhen-2 annotation summary report and the MapSNPs annotation summary repo
 
 ## Add the outputs into the wheat gene annotation database
 Please refer to the script wheatPolyPhen2_script.Rmd
+
+## Reference
+Adzhubei I, Jordan DM, Sunyaev SR (2013) Predicting functional effect of human missense mutations using PolyPhen-2. Curr Protoc Hum Genet 76: 7–20
 
