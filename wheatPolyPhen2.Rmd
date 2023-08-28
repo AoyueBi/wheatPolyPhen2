@@ -1,0 +1,226 @@
+---
+title: "wheatPolyPhen2"
+author: "Aoyue Bi, Daxing Xu"
+date: "8/29/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## wheatPolyPhen2
+### step1:数据库导入并生成input数据
+
+-   数据库中的Trans 有 75696 个基因有UniPro， 2317 个基因没有
+    UniProtKB_AC ID
+-   最终加入计算的位点必须满足： ancestral state && nonsynonymous &&
+    UniProtKB_AC && AMINO_POS REF_AMINO != * && ALT_AMINO != *
+
+```{r}
+### SNP annotation DB
+dfSNPdb <- read.delim("/Users/Aoyue/project/wheatVMap2_1000/002_dataAnalysis/004_annoDB/006_geneSNPAnnotation_merge/001_geneSNPAnno.txt.gz")
+```
+
+-   Merge All SIFT result
+```{r message=FALSE, warning=FALSE}
+### SIFT output
+dftest <- read.delim("/Users/Aoyue/project/wheatVMap2_1000/002_dataAnalysis/004_annoDB/002_sift/003_output/001_alt/chr001_gene_vmap2.1_SIFTannotations.xls.gz")
+
+colnames(dftest)
+
+inputDir <- c("/Users/Aoyue/project/wheatVMap2_1000/002_dataAnalysis/004_annoDB/002_sift/003_output/001_alt")
+
+AoSIFT <- function(filename){
+  df <- read_tsv(filename) %>% 
+    filter(VARIANT_TYPE=="NONSYNONYMOUS") %>% ### polyphen-2 只判断此类型的变异
+    select(Chr=CHROM,Pos=POS,Transcript=TRANSCRIPT_ID,AMINO_POS,REF_AMINO,ALT_AMINO)
+  
+  return(df)
+}
+
+dfsiftMerge <- map(.x=dir(inputDir,full.names = T),.f = AoSIFT) %>% 
+  bind_rows()
+```
+- 产生 PolyPhen-2 输入文件的详细信息
+```{r}
+library(tidyverse)
+dfhmUniprot2Trans <- read.delim("/Users/Aoyue/project/wheatVMap2_1000/002_dataAnalysis/013_LIST_S2/002_IDconversion/Uniprot2TransHashmap.txt") ### 130,830 lines
+
+dfIDsize <- read_csv("/Users/Aoyue/project/wheatVMap2_1000/002_dataAnalysis/013_LIST_S2/000_script/ID.csv",col_names = F) %>% select(UniProtKB_AC=X1,Amino_Size=X2)
+
+### 总体文件，信息比较全
+dfinput <- dfSNPdb %>%
+  ### 只计算有 ancestral state
+  mutate(Sub = str_sub(Transcript,9,9)) %>%
+  filter(!is.na(Ancestral)) %>%
+  filter(Ancestral==Ref|Ancestral==Alt) %>%
+  mutate(IfRefisAnc = if_else(Ref == Ancestral,"Anc","Der")) %>%
+  ### 只计算有 ancestral state
+  select(c(Chr,Pos,Transcript)) %>%
+  left_join(.,dfhmUniprot2Trans,by="Transcript") %>% 
+  left_join(.,dfIDsize,by=c("UniProtKB_AC")) %>% 
+  left_join(.,dfsiftMerge,by=c("Chr","Pos","Transcript")) %>% 
+  filter(!is.na(UniProtKB_AC),!is.na(AMINO_POS)) %>% 
+  filter(REF_AMINO != "*", ALT_AMINO != "*")
+
+write_tsv(dfinput,"~/Documents/dfinput.txt")
+
+### 接上，计数要计算的基因数
+count <- dfinput %>% group_by(Transcript) %>% count() %>% nrow()
+print(str_c(count," genes in this case")) 
+```
+
+- PolyPhen-2 input data
+```{r}
+### PolyPhen-2 要求的输入文件,这里只有一个文件，需要根据基因拆开
+dfin <- dfinput %>% 
+  select(UniProtKB_AC,AMINO_POS,REF_AMINO,ALT_AMINO)
+  # sample_n(10)
+
+write_tsv(dfin,"~/Documents/input_PolyPhen-2.txt",col_names = F)
+```
+
+```{r}
+### 合计输出 41720 个文件
+# dfinput %>%
+#   select(Transcript,UniProtKB_AC,AMINO_POS,REF_AMINO,ALT_AMINO) %>% 
+#   group_by(Transcript) %>%
+#   group_walk(~ write_tsv(.x, path = file.path("/Users/Aoyue/project/wheatVMap2_1000/002_dataAnalysis/015_PolyPhen_2/001_input",str_c(.y,".txt")),col_names = F))
+
+```
+
+### step2: cmd
+- 最原始脚本，根据转录本，输出运行命令
+```{r}
+dfscript <- dfinput %>% 
+  # sample_n(10) %>% 
+  group_by(Transcript) %>% 
+  count() %>%
+  ungroup() %>% ### NOTE!!!!
+  mutate(cmd = str_c("run_pph.pl ../001_input/",Transcript,".txt > ../002_out1/",Transcript,".features 2> ../004_log/",Transcript,".log && run_weka.pl ../002_out1/",
+                     Transcript,".features 1> ../003_out2/",Transcript,".predictions && echo ",Transcript," Done")) %>% select(cmd) %>% ungroup()
+
+write_tsv(dfscript,path = "~/Documents/sh.sh",col_names = F)
+```
+- 根据已生成的结果文件，合理分配剩余 25184 个命令。
+```{r}
+### step1: 获取已产生结果的转录本名字
+outputDirS <- c("/Users/Aoyue/Documents/003_out2/")
+
+df_alreadyOut <- dir(outputDirS,full.names = F,pattern = "") %>% 
+  tibble() %>% mutate(Transcript = str_replace_all(.,".predictions","")) %>% 
+  select(Transcript)
+
+### step2:过滤已产生的结果，根据转录本，输出剩余的运行命令
+dfscript <- dfinput %>% 
+  # sample_n(10) %>%
+  anti_join(.,df_alreadyOut,by="Transcript") %>% 
+  group_by(Transcript) %>% 
+  count() %>%
+  ungroup() %>% ### NOTE!!!!
+  mutate(cmd = str_c("run_pph.pl ../001_input/",Transcript,".txt > ../002_out1/",Transcript,".features 2> ../004_log/",Transcript,".log && run_weka.pl ../002_out1/",
+                     Transcript,".features 1> ../003_out2/",Transcript,".predictions && echo ",Transcript," Done")) %>% select(cmd) %>% ungroup()
+
+write_tsv(dfscript,path = "~/Documents/sh.sh",col_names = F)
+
+```
+- 反向计算时，过滤 25184 个基因, 16536 个基因在204上计算
+```{r}
+df_alreadyOut <- read_tsv("/Users/Aoyue/project/wheatVMap2_1000/002_dataAnalysis/015_PolyPhen_2/000_script/002_remain/sh.sh",col_names = F) %>%
+  mutate(Transcript = str_sub(X1,25,str_locate(X1,".txt")[,1]-1)) %>% 
+  select(Transcript)
+
+### step2:过滤已产生的结果，根据转录本，输出剩余的运行命令
+dfscript <- dfinput %>% 
+  anti_join(.,df_alreadyOut,by="Transcript") %>%  
+  group_by(Transcript) %>% 
+  count() %>% 
+  ungroup() %>% ### NOTE!!!!
+  mutate(cmd = str_c("run_pph.pl ../001_input/",Transcript,".txt > ../002_out1/",Transcript,".features 2> ../004_log/",Transcript,".log && run_weka.pl ../002_out1/",
+                     Transcript,".features 1> ../003_out2/",Transcript,".predictions && echo ",Transcript," Done")) %>% select(cmd) %>% ungroup()
+
+write_tsv(dfscript,path = "~/Documents/sh.sh",col_names = F)
+```
+
+
+
+
+### step3: add result to SNPAnnoDB
+- 注意： dfpolyphen_ref2alt and dfpolyphen_alt2ref 结果中有重复，因为不同转录本有相同的UniProtKB_AC 号，所以UniProtKB_AC AMINO_POS REF_AMINO ALT_AMINO 不能确定唯一的ID，必须先把结果去重复。 
+```{r message=FALSE, warning=FALSE}
+dftotal <- read_tsv("/Users/Aoyue/project/wheatVMap2_1000/002_dataAnalysis/004_annoDB/006_geneSNPAnnotation_merge/009_geneSNPAnno.txt.gz")
+```
+
+```{r message=FALSE, warning=FALSE}
+### step1: merge all files
+# outputDirS <- c("/Users/Aoyue/project/wheatVMap2_1000/002_dataAnalysis/015_PolyPhen_2/002_out2")
+
+# dfpolyphen <- outputDirS %>% dir(full.names = T) %>% 
+#   map(read_tsv) %>% 
+#   bind_rows() %>% 
+#   rename(o_acc = "#o_acc")
+
+### 由于输出4万多个文件，比较大，在R中运行比较费时，故用 java 
+dfpolyphen_ref2alt <- read_tsv("/Users/Aoyue/project/wheatVMap2_1000/002_dataAnalysis/015_PolyPhen_2/004_out_merge/PolyPhen_2_ref2alt_predictions.txt.gz") %>% 
+  rename(o_acc = "#o_acc") %>% 
+  select(UniProtKB_AC=o_acc, AMINO_POS=o_pos, 
+         REF_AMINO=o_aa1, ALT_AMINO=o_aa2,
+         Alt_PolyPhen2_prediction=prediction,
+         Alt_PolyPhen2_class=pph2_class,
+         Alt_PolyPhen2_prob=pph2_prob) 
+
+dfpolyphen_ref2alt_2 <- dfpolyphen_ref2alt %>% 
+  mutate(Union=str_c(UniProtKB_AC,AMINO_POS,REF_AMINO,ALT_AMINO,sep = "_")) %>% 
+  distinct(.,Union,.keep_all = T) %>% 
+  select(-Union)
+
+dfpolyphen_alt2ref <- read_tsv("/Users/Aoyue/project/wheatVMap2_1000/002_dataAnalysis/015_PolyPhen_2/004_out_merge/PolyPhen_2_alt2ref_predictions.txt.gz") %>% 
+  rename(o_acc = "#o_acc") %>% 
+  select(UniProtKB_AC=o_acc, AMINO_POS=o_pos, 
+         REF_AMINO=o_aa1, ALT_AMINO=o_aa2,
+         Ref_PolyPhen2_prediction=prediction,
+         Ref_PolyPhen2_class=pph2_class,
+         Ref_PolyPhen2_prob=pph2_prob)
+
+dfpolyphen_alt2ref_2 <- dfpolyphen_alt2ref %>% 
+  mutate(Union=str_c(UniProtKB_AC,AMINO_POS,REF_AMINO,ALT_AMINO,sep = "_")) %>% 
+  distinct(.,Union,.keep_all = T) %>% 
+  select(-Union)
+
+### step2: dfinput 文件，信息比较全，是我们进行polyphen-2计算的前一步文件
+### 把上一步结果加入 dfinput 文件中
+dfinput2 <- dfinput %>% 
+  left_join(.,dfpolyphen_ref2alt_2,by=c("UniProtKB_AC","AMINO_POS",
+                               "REF_AMINO","ALT_AMINO")) %>% 
+  left_join(.,dfpolyphen_alt2ref_2,by=c("UniProtKB_AC","AMINO_POS",
+                               "REF_AMINO","ALT_AMINO")) %>%   
+  select(c(Chr,Pos,Transcript,
+           Alt_PolyPhen2_prediction,
+           Alt_PolyPhen2_class,
+           Alt_PolyPhen2_prob,
+           Ref_PolyPhen2_prediction,
+           Ref_PolyPhen2_class,
+           Ref_PolyPhen2_prob)) 
+
+dfout <- dftotal %>% left_join(.,dfinput2,by=c("Chr","Pos","Transcript"))
+
+# write_tsv(dfout,path = "/Users/Aoyue/project/wheatVMap2_1000/002_dataAnalysis/004_annoDB/006_geneSNPAnnotation_merge/010_geneSNPAnno.txt.gz")
+```
+
+### step4: Add derived PolyPhen-2
+```{r}
+dfout2 <- dfout %>% 
+  # mutate(DerivedAllele = ifelse(Ancestral==Ref,"Alt",
+  #                               ifelse(Ancestral==Alt,"Ref",NA))) %>% 
+  mutate(Derived_PolyPhen2_prediction=ifelse(Ancestral==Ref,Alt_PolyPhen2_prediction,
+                                             ifelse(Ancestral==Alt,Ref_PolyPhen2_prediction,NA))) %>% 
+  mutate(Derived_PolyPhen2_class=ifelse(Ancestral==Ref,Alt_PolyPhen2_class,
+                                             ifelse(Ancestral==Alt,Ref_PolyPhen2_class,NA))) %>% 
+  mutate(Derived_PolyPhen2_prob=ifelse(Ancestral==Ref,Alt_PolyPhen2_prob,
+                                             ifelse(Ancestral==Alt,Ref_PolyPhen2_prob,NA)))
+
+# write_tsv(dfout2,path = "/Users/Aoyue/project/wheatVMap2_1000/002_dataAnalysis/004_annoDB/006_geneSNPAnnotation_merge/011_geneSNPAnno.txt.gz")
+
+```
+
