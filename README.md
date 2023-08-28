@@ -54,6 +54,25 @@ Be prepared to have at least 60 GB of free disk space available to accommodate a
 1. Download the latest PolyPhen-2 source code from: <http://genetics.bwh.harvard. edu/pph2/dokuwiki/downloads>.
 2. Extract the source tarball: ``` tar vxzf polyphen-2.2.2r402.tar.gz ```
 3. Download the database tarballs from the same site.
+The two precomputed alignment tarballs are recommended, but not required. If you choose not to install the MLC alignments, PolyPhen-2 will attempt to build MLC alignments for your proteins automatically on its first invocation and subsequently use them for all further runs. In the wheat conservation calculation, we will perform the alignments process.
+4. Extract the tarballs you just downloaded, by entering commands similar to the following:
+```
+tar vxjf polyphen-2.2.2-databases-2011_12.tar.bz2
+tar vxjf polyphen-2.2.2-alignments-mlc-2011_12.tar.bz2
+tar vxjf polyphen-2.2.2-alignments-multiz-2009_10.tar.bz2
+```
+5. SetuptheshellenvironmentforyourPolyPhen-2installationbytypingthefollowing commands (if you are using Linux and the bash shell; different commands may be required for different systems).
+```
+cat >> ∼/.bashrc
+alias pph2="cd /data1/home/aoyue/biosoftware/polyphen-2.2.3/"
+export PATH=$PATH:/data1/home/aoyue/biosoftware/polyphen-2.2.3/bin
+export PPH=/data1/home/aoyue/biosoftware/polyphen-2.2.3
+export PATH="$PATH:$PPH/bin"
+<Ctrl-D>
+source ∼/.bashrc
+```
+6. Download the NCBI BLAST+ tools from: <ftp://ftp.ncbi.nih.gov/blast/executables/LATEST/>.
+7. 
 
 
 
