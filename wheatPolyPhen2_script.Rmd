@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## wheatPolyPhen2
-### step1:数据库导入并生成input数据
+### step1: Database import and generate input data
 
 -   数据库中的Trans 有 75696 个基因有UniPro， 2317 个基因没有
     UniProtKB_AC ID
