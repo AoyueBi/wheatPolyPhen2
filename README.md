@@ -55,13 +55,15 @@ Be prepared to have at least 60 GB of free disk space available to accommodate a
 2. Extract the source tarball: ``` tar vxzf polyphen-2.2.2r402.tar.gz ```
 3. Download the database tarballs from the same site.
 The two precomputed alignment tarballs are recommended, but not required. If you choose not to install the MLC alignments, PolyPhen-2 will attempt to build MLC alignments for your proteins automatically on its first invocation and subsequently use them for all further runs. In the wheat conservation calculation, we will perform the alignments process.
+
 4. Extract the tarballs you just downloaded, by entering commands similar to the following:
 ```
 tar vxjf polyphen-2.2.2-databases-2011_12.tar.bz2
 tar vxjf polyphen-2.2.2-alignments-mlc-2011_12.tar.bz2
 tar vxjf polyphen-2.2.2-alignments-multiz-2009_10.tar.bz2
 ```
-5. SetuptheshellenvironmentforyourPolyPhen-2installationbytypingthefollowing commands (if you are using Linux and the bash shell; different commands may be required for different systems).
+
+5. Set up the shell environment for your PolyPhen-2 installation by typing the following commands.
 ```
 cat >> ∼/.bashrc
 alias pph2="cd /data1/home/aoyue/biosoftware/polyphen-2.2.3/"
@@ -71,10 +73,72 @@ export PATH="$PATH:$PPH/bin"
 <Ctrl-D>
 source ∼/.bashrc
 ```
-6. Download the NCBI BLAST+ tools from: <ftp://ftp.ncbi.nih.gov/blast/executables/LATEST/>.
-7. 
 
+6. Download and install the NCBI BLAST+ tools from: <ftp://ftp.ncbi.nih.gov/blast/executables/LATEST/>.
+```
+wget ftp://ftp.ncbi.nih.gov/blast/executables/LATEST/ncbiblast-2.2.26+-x64-linux.tar.gz
+tar vxzf ncbi-blast-2.2.26+-x64-linux.tar.gz
+mv ncbi-blast-2.2.26+/* $PPH/blast/
+```
 
+7. Optionally, download and install Blat.
+a. Download Blat binaries or sources according to instructions here: <http://genome.ucsc.edu/FAQ/FAQblat.html#blat3.>
+b. If you need to build Blat from source, follow the instructions on the site above.
+c. If you chose to download Blat, copy the files required by PolyPhen-2 to the PolyPhen-2 installation directory.
+``` cp blat twoBitToFa $PPH/bin/ ```
+d. Ensure that the executable bit is set for all downloaded binaries:
+```
+chmod +x $PPH/bin/* 
+chmod +x $PPH/blast/bin/*
+```
+
+8. Download and install the UniRef100 nonredundant protein sequence database:
+```
+cd $PPH/nrdb
+wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/uniref/uniref100/uniref100.fasta.gz
+gunzip uniref100.fasta.gz
+$PPH/update/format defline.pl uniref100.fasta > uniref100-formatted.fasta
+$PPH/blast/bin/makeblastdb -in uniref100-formatted.fasta -dbtype prot -out uniref100 -parse seqids
+rm -f uniref100.fasta uniref100-formatted.fasta
+```
+
+9. Download a copy of the PDB and DSSP database:
+```
+rsync -rltv --delete-after --port=33444 rsync.wwpdb.org::ftp/data/structures/divided/pdb/ $PPH/wwpdb/divided/pdb/
+rsync -rltv --delete-after --port=33444 rsync.wwpdb.org::ftp/data/structures/all/pdb/ $PPH/wwpdb/all/pdb/
+rsync -rltvz --delete-after rsync://rsync.cmbi.ru.nl/dssp/ $PPH/dssp/
+
+```
+
+10. Download all remaining packages with the automated download procedure:
+```
+cd $PPH/src
+make download
+```
+If automatic downloading fails for whatever reason, you will need to manually.
+<http://mafft.cbrc.jp/alignment/software/mafft-6.935-without-extensions-src.tgz>
+<http://prdownloads.sourceforge.net/weka/weka-3-6-7.zip>
+After the packages are downloaded, change into ```$PPH/src``` directory and repeat the ```make download``` command.
+
+11. Build and install these remaining programs and configure the installation:
+```
+cd $PPH/src
+make clean
+make
+make install
+cd $PPH
+./configure
+``` 
+
+12. Optionally, test the PolyPhen-2 installation by running the PolyPhen-2 pipeline with the test set of protein variants and compare the results to the reference output files in the $PPH/sets folder:
+```
+cd $PPH
+bin/run pph.pl sets/test.input 1>test.pph.output 2>test.pph.log
+bin/run weka.pl test.pph.output >test.humdiv.output
+bin/run weka.pl -l models/HumVar.UniRef100.NBd.f11.model test.pph.output >test.humvar.output
+diff test.humdiv.output sets/test.humdiv.output
+diff test.humvar.output sets/test.humvar.output
+```
 
 
 
