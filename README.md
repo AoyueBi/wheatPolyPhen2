@@ -1,7 +1,7 @@
 # wheatPolyPhen2
-wheatPolyPhen2 is scripts atlas that performs functional annotation of SNPs, maps coding SNPs to gene transcripts, extracts protein sequence annotations and structural attributes, and builds conservation profiles. 
+wheatPolyPhen2 is script atlas that performs functional annotation of SNPs, maps coding SNPs to gene transcripts, extracts protein sequence annotations and structural attributes, and builds conservation profiles. 
 
-The PolyPhen-2 Wiki site is at <http://genetics.bwh.harvard.edu/pph2/dokuwiki/start>. Here we will provide a brief pipeline and some important precautions when estimating the probability of the missense mutation being damading.
+The PolyPhen-2 Wiki site is at <http://genetics.bwh.harvard.edu/pph2/dokuwiki/start>. Here we will provide a brief pipeline and some important precautions when estimating the probability of the missense mutation being damaging in the wheat genome.
 
 ## Prerequisites
 ### System Requirements
@@ -38,6 +38,7 @@ C/C++ compiler, make, etc
 
 Download and installed size estimates for the database components of PolyPhen-2 are listed in Table 1.
 Be prepared to have at least 60 GB of free disk space available to accommodate a full PolyPhen-2 install.
+The website is at <http://genetics.bwh.harvard.edu/pph2/dokuwiki/downloads>.
 
 | Database | Download size (GB) | Installed size (GB) |
 | :----| :----: | :----: |
@@ -51,7 +52,7 @@ Be prepared to have at least 60 GB of free disk space available to accommodate a
 
 ## Installation Steps and Precautions
 
-1. Download the latest PolyPhen-2 source code from: <http://genetics.bwh.harvard. edu/pph2/dokuwiki/downloads>.
+1. Download the latest PolyPhen-2 source code from: <http://genetics.bwh.harvard.edu/pph2/dokuwiki/downloads>.
 2. Extract the source tarball: ``` tar vxzf polyphen-2.2.2r402.tar.gz ```
 3. Download the database tarballs from the same site.
 The two precomputed alignment tarballs are recommended, but not required. If you choose not to install the MLC alignments, PolyPhen-2 will attempt to build MLC alignments for your proteins automatically on its first invocation and subsequently use them for all further runs. In the wheat conservation calculation, we will perform the alignments process.
@@ -82,11 +83,15 @@ mv ncbi-blast-2.2.26+/* $PPH/blast/
 ```
 
 7. Optionally, download and install Blat.
-a. Download Blat binaries or sources according to instructions here: <http://genome.ucsc.edu/FAQ/FAQblat.html#blat3.>
-b. If you need to build Blat from source, follow the instructions on the site above.
-c. If you chose to download Blat, copy the files required by PolyPhen-2 to the PolyPhen-2 installation directory.
-``` cp blat twoBitToFa $PPH/bin/ ```
-d. Ensure that the executable bit is set for all downloaded binaries:
+- a. Download Blat binaries or sources according to instructions here: <http://genome.ucsc.edu/FAQ/FAQblat.html#blat3.>
+- b. If you need to build Blat from source, follow the instructions on the site above.
+- c. If you chose to download Blat, copy the files required by PolyPhen-2 to the PolyPhen-2 installation directory.
+  
+```
+cp blat twoBitToFa $PPH/bin/
+```
+
+- d. Ensure that the executable bit is set for all downloaded binaries:
 ```
 chmod +x $PPH/bin/* 
 chmod +x $PPH/blast/bin/*
@@ -115,8 +120,9 @@ cd $PPH/src
 make download
 ```
 If automatic downloading fails for whatever reason, you will need to manually.
-<http://mafft.cbrc.jp/alignment/software/mafft-6.935-without-extensions-src.tgz>
-<http://prdownloads.sourceforge.net/weka/weka-3-6-7.zip>
+- <http://mafft.cbrc.jp/alignment/software/mafft-6.935-without-extensions-src.tgz>
+- <http://prdownloads.sourceforge.net/weka/weka-3-6-7.zip>
+
 After the packages are downloaded, change into ```$PPH/src``` directory and repeat the ```make download``` command.
 
 11. Build and install these remaining programs and configure the installation:
@@ -132,18 +138,18 @@ cd $PPH
 
 > **PRECOMPATH modification**
 
-The path misses required subdirectories listed above!
-Is the path correct? 
-Keep it (Y/n)? n
-PRECOMPATH = /data1/home/aoyue/biosoftware/polyphen-2.2.3/precomputed
+- The path misses required subdirectories listed above!
+- Is the path correct? 
+- Keep it (Y/n)? n
+- PRECOMPATH = /data1/home/aoyue/biosoftware/polyphen-2.2.3/precomputed
 
 > **parameter modification**
 
-option.conf 
-OS =  Triticum aestivum
-spnam = WHEAT
-taxn = 4565
-file = plants
+- option.conf 
+- OS =  Triticum aestivum
+- spnam = WHEAT
+- taxn = 4565
+- file = plants
 
 > **Update the database**
 
@@ -170,9 +176,9 @@ diff test.humvar.output sets/test.humvar.output
 
 ## RUN the PolyPhen-2 STANDALONE SOFTWARE
 The PolyPhen-2 analysis pipeline consists of three separate components, each one executed by a dedicated Perl program:
-MapSNPs (mapsnps.pl) Genomic SNP annotation tool
-PolyPhen-2 (run pph.pl) Protein variant annotation tool
-PolyPhen-2 (run weka.pl) Probabilistic variant classifier
+- MapSNPs (mapsnps.pl) Genomic SNP annotation tool
+- PolyPhen-2 (run pph.pl) Protein variant annotation tool
+- PolyPhen-2 (run weka.pl) Probabilistic variant classifier
 
 **The Internal call command are as followings:**
 
@@ -185,5 +191,13 @@ PolyPhen-2 (run weka.pl) Probabilistic variant classifier
 
 /data1/home/aoyue/biosoftware/polyphen-2.2.3/bin/psic -l A0A3B6CD26.aln /data1/home/aoyue/biosoftware/polyphen-2.2.3/matr/Blosum62.txt A0A3B6CD26.prf 
 ```
+
+## Explanation of the outputs
+
+The PolyPhen-2 annotation summary report and the MapSNPs annotation summary report can be checked at <http://genetics.bwh.harvard.edu/pph2/dokuwiki/docs>.
+
+- D: Probably damaging (>=0.957),
+- P: possibly damaging (0.453<=pp2_hdiv<=0.956),
+- B: benign (pp2_hdiv<=0.452)
 
 
