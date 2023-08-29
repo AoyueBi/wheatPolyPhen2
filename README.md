@@ -181,7 +181,9 @@ The PolyPhen-2 analysis pipeline consists of three separate components, each one
 - PolyPhen-2 (run pph.pl) Protein variant annotation tool
 - PolyPhen-2 (run weka.pl) Probabilistic variant classifier
 
-The input file was made by the script Please refer to the script wheatPolyPhen2_script.Rmd -> step1: Database import and generate input data
+The input file was made by the script wheatPolyPhen2_script.Rmd -> step1: Database import and generate input data.
+
+The Multi-threaded parallel commands were made by the script wheatPolyPhen2_script.Rmd -> step2: cmd.
 
 The CMD are listed as followings:
 ```
@@ -211,7 +213,7 @@ The PolyPhen-2 annotation summary report and the MapSNPs annotation summary repo
 - B: benign (pp2_hdiv<=0.452)
 
 ## Add the outputs into the wheat gene annotation database
-Please refer to the script wheatPolyPhen2_script.Rmd
+Please refer to the script wheatPolyPhen2_script.Rmd -> step3: Add result to SNPAnnoDB and step4: Add derived PolyPhen-2.
 
 ## Reference
 Adzhubei I, Jordan DM, Sunyaev SR (2013) Predicting functional effect of human missense mutations using PolyPhen-2. Curr Protoc Hum Genet 76: 7–20
